@@ -1,0 +1,28 @@
+name: Check
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install deps
+        run: npm ci
+      - name: Lint
+        run: npm run lint  
+      - name: Test
+        run: npm run test
+      - name: Build
+        run: npm run build
+      - name: Deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.FTP_SERVER }} # Your server's IP address
+          username: ${{ secrets.FTP_USERNAME }} # Your server's username
+          password: ${{ secrets.FTP_PASSWORD }} # Your server's SSH private key
+          script: |
+            cd /var/www/api.dungeonlooter.ru
+            git pull origin master
+            npm install
+            npm run build
+            pm2 restart npm
